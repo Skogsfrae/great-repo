@@ -15,7 +15,8 @@ void initPcbs()
 		pcbFree = procp[i];
 		pcbFree->p_next = procp[i+1];
 		pcbFree->p_prnt = pcbFree->p_child = pcbFree->p_sib = NULL;
-		pcbFree->p_s = pcbFree->p_semAdd = NULL;
+		pcbFree->p_s = 0;
+		pcbFree->p_semAdd = NULL;
 		pcbFree = pcbFree->p_next;
 	}
 

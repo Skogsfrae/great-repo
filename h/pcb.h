@@ -1,6 +1,8 @@
 #ifndef PCB_H
 #define PCB_H
 
+#include "../h/types.h"
+
 /* process control block type */
 typedef struct pcb_t {
 	/* process queue fields */
