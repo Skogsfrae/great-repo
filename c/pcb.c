@@ -6,22 +6,19 @@ pcb_t *pcbFree, *pcbFree_h, *pcbFree_t;
 void initPcbs()
 {
 	int i;
-	static pcb_t *procp[MAXPROC];
+	static pcb_t procp[MAXPROC];
 
-	pcbFree_h = procp[0];
+	pcbFree_h = &procp[0];
 
-	pcbFree = procp[0];
-	pcbFree->p_next = procp[1];
+	pcbFree = &procp[0];
+	pcbFree->p_next = &procp[1];
 	pcbFree = pcbFree->p_next;
 
 	for(i=1; i < MAXPROC; i++)
 	{
-		pcbFree = procp[i];
-		pcbFree->p_prev = procp[i-1];
-		pcbFree->p_next = procp[i+1];
-		//pcbFree->p_prnt = pcbFree->p_child = pcbFree->p_sib = NULL;
-		//pcbFree->p_s = 0;
-		//pcbFree->p_semAdd = NULL;           commentati perche' verranno inizializzati a NULL/0 dalla funzione allocPcb
+		pcbFree = &procp[i];
+		pcbFree->p_prev = &procp[i-1];
+		pcbFree->p_next = &procp[i+1];
 		pcbFree = pcbFree->p_next;
 	}
 
