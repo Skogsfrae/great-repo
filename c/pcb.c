@@ -50,4 +50,7 @@ void freePcb(pcb_t *p)
 
 	pcbFree_t = p;
 }
+<<<<<<< HEAD
 
+=======
+>>>>>>> e68a3561b333618e5d78a06cd7a72bbc63501f5e
