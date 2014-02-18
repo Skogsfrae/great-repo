@@ -59,7 +59,7 @@ void freePcb(pcb_t *p)
 	pcbFree_t = p;
 }
 
-pcb_t *mkEmpryProcQ()
+pcb_t *mkEmptyProcQ()
 {
 	pcb_t *pcbTmp = NULL;
 	return pcbTmp;
@@ -150,7 +150,7 @@ void insertChild(pcb_t *prnt, pcb_t *p)
 	prnt->p_child = p;
 }
 
-pcb_t *romoveChild(pcb_t *p)
+pcb_t *removeChild(pcb_t *p)
 {
 	pcb_t *pcbTmp;
 
