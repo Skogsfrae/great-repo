@@ -69,6 +69,134 @@ int main() {
 	initPcbs();
 	addokbuf("Initialized process control blocks   \n");
 
+        /* Check allocPcb */
+        for (i = 0; i < MAXPROC; i++) {
+                if ((procp[i] = allocPcb()) == NULL)
+                        adderrbuf("allocPcb(): unexpected NULL   ");
+        }
+        if (allocPcb() != NULL) {
+                adderrbuf("allocPcb(): allocated more than MAXPROC entries   ");
+        }
+        addokbuf("allocPcb ok   \n");
+
+        /* return the last 10 entries back to free list */
+        for (i = 10; i < MAXPROC; i++)
+                freePcb(procp[i]);
+        addokbuf("freed 10 entries   \n");
+
+        /* create a 10-element process queue */
+        qa = mkEmptyProcQ();
+        if (!emptyProcQ(qa)) adderrbuf("emptyProcQ(qa): unexpected FALSE   ");
+        addokbuf("Inserting...   \n");
+        for (i = 0; i < 10; i++) {
+                if ((q = allocPcb()) == NULL)
+                        adderrbuf("allocPcb(): unexpected NULL while insert   ");
+                switch (i) {
+                        case 0:
+                                firstproc = q;
+				addokbuf("case 0 passed \n");
+                                break;
+                        case 5:
+                                midproc = q;
+				addokbuf("case 5 passed \n");
+                                break;
+                        case 9:
+                                lastproc = q;
+				addokbuf("case 9 passed \n");
+                                break;
+                        default:
+                                break;
+                }
+                insertProcQ(&qa, q);
+        }
+        addokbuf("inserted 10 elements   \n");
+
+        if (emptyProcQ(qa)) adderrbuf("emptyProcQ(qa): unexpected TRUE"   );
+
+        /* Check outProcQ and headProcQ */
+        if (headProcQ(qa) != firstproc)
+                adderrbuf("headProcQ(qa) failed   ");
+
+        q = outProcQ(&qa, firstproc);
+        if ((q == NULL) || (q != firstproc))
+                adderrbuf("outProcQ(&qa, firstproc) failed on first entry   ");
+        freePcb(q);
+
+        q = outProcQ(&qa, midproc);
+        if (q == NULL || q != midproc)
+                adderrbuf("outProcQ(&qa, midproc) failed on middle entry   ");
+        freePcb(q);
+
+        if (outProcQ(&qa, procp[0]) != NULL)
+                adderrbuf("outProcQ(&qa, procp[0]) failed on nonexistent entry   ");
+        addokbuf("outProcQ() ok   \n");
+
+        /* Check if removeProc and insertProc remove in the correct order */
+        addokbuf("Removing...   \n");
+        for (i = 0; i < 8; i++) {
+                if ((q = removeProcQ(&qa)) == NULL)
+                        adderrbuf("removeProcQ(&qa): unexpected NULL   ");
+                freePcb(q);
+        }
+
+        if (q != lastproc)
+                adderrbuf("removeProcQ(): failed on last entry   ");
+
+        if (removeProcQ(&qa) != NULL)
+                adderrbuf("removeProcQ(&qa): removes too many entries   ");
+
+        if (!emptyProcQ(qa))
+                adderrbuf("emptyProcQ(qa): unexpected FALSE   ");
+
+        addokbuf("insertProcQ(), removeProcQ() and emptyProcQ() ok   \n");
+        addokbuf("process queues module ok      \n");
+
+        addokbuf("checking process trees...\n");
+
+        if (!emptyChild(procp[2]))
+                adderrbuf("emptyChild: unexpected FALSE   ");
+
+        /* make procp[1] through procp[9] children of procp[0] */
+        addokbuf("Inserting...   \n");
+        for (i = 1; i < 10; i++) {
+                insertChild(procp[0], procp[i]);
+		if((procp[0])->p_child == NULL)
+			addokbuf("errore inserimento figlio\n");
+        }
+        addokbuf("Inserted 9 children   \n");
+
+        if (emptyChild(procp[0]))
+                adderrbuf("emptyChild(procp[0]): unexpected TRUE   ");
+
+        /* Check outChild */
+        q = outChild(procp[1]);
+        if (q == NULL || q != procp[1])
+                adderrbuf("outChild(procp[1]) failed on first child   ");
+        q = outChild(procp[4]);
+        if (q == NULL || q != procp[4])
+                adderrbuf("outChild(procp[4]) failed on middle child   ");
+        if (outChild(procp[0]) != NULL)
+                adderrbuf("outChild(procp[0]) failed on nonexistent child   ");
+        addokbuf("outChild ok   \n");
+
+        /* Check removeChild */
+        addokbuf("Removing...   \n");
+        for (i = 0; i < 7; i++) {
+                if ((q = removeChild(procp[0])) == NULL)
+                        adderrbuf("removeChild(procp[0]): unexpected NULL   ");
+        }
+        if (removeChild(procp[0]) != NULL)
+                adderrbuf("removeChild(): removes too many children   ");
+
+        if (!emptyChild(procp[0]))
+                adderrbuf("emptyChild(procp[0]): unexpected FALSE   ");
+
+        addokbuf("insertChild(), removeChild() and emptyChild() ok   \n");
+        addokbuf("process tree module ok      \n");
+
+        for (i = 0; i < 10; i++)
+                freePcb(procp[i]);
+
 	return 0;
 
 }
