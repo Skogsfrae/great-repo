@@ -7,6 +7,7 @@ static pcb_t procp[MAXPROC];
 void initPcbs()
 {
 	int i;
+<<<<<<< HEAD
 
 	for(i=0; i<MAXPROC; i++)
 	{
@@ -25,6 +26,22 @@ void initPcbs()
 			pcbFree->p_next = NULL;
 		}
 		else pcbFree->p_next = &procp[i+1];
+=======
+	static pcb_t procp[MAXPROC];
+
+	pcbFree_h = &procp[0];
+
+	pcbFree = &procp[0];
+	pcbFree->p_next = &procp[1];
+	pcbFree = pcbFree->p_next;
+
+	for(i=1; i < MAXPROC; i++)
+	{
+		pcbFree = &procp[i];
+		pcbFree->p_prev = &procp[i-1];
+		pcbFree->p_next = &procp[i+1];
+		pcbFree = pcbFree->p_next;
+>>>>>>> 1c7248405126837f0df735db705519017d8ce5d0
 	}
 }
 
