@@ -25,8 +25,11 @@ void initPcbs()
 			pcbFree->p_next = NULL;
 		}
 		else pcbFree->p_next = &procp[i+1];
+<<<<<<< HEAD
 
 		pcbFree = pcbFree->p_next;
+=======
+>>>>>>> e0d2ad5b7a3ab465753833de8544faf678c10a7c
 	}
 }
 
