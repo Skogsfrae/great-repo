@@ -1,0 +1,35 @@
+# Makefile for phase1
+
+DEFS =  h/types10.h Makefile 
+MAINDIR = /usr
+
+UMPSDIR = $(MAINDIR)/lib/uMPS
+#flag del compilatore
+CFLAGS = -pedantic -Wall -c
+LDFLAGS =  -T /usr/share/uMPS/elf32ltsmip.h.umpscore.x 
+ 
+CC = $(MAINDIR)/bin/mipsel-linux-gcc -I./uMPS_include -I./h -I./e -I/usr/include/uMPS -I/usr/include/
+LD = $(MAINDIR)/bin/mipsel-linux-ld
+
+SRCDIR = src
+
+all: kernel.core.umps
+
+kernel.core.umps: kernel
+	umps-elf2umps -k $<
+
+kernel: p1test.0.1.2.o asl.o pcb.o 
+	$(LD) $(LDFLAGS) $(UMPSDIR)/crtso.o p1test.0.1.2.o $(UMPSDIR)/libumps.o -o $@
+
+p1test.0.1.2.o: p1test.0.1.2.c $(DEFS)
+	$(CC) $(CFLAGS) p1test.0.1.2.c 
+	
+listx.o: $(SRCDIR)/listx.c $(DEFS)
+	$(CC) $(CFLAGS) $(SRCDIR)/listx.c
+	
+asl.o: $(SRCDIR)/asl.c $(DEFS)
+	$(CC) $(CFLAGS) $(SRCDIR)/asl.c
+	
+pcb.o: $(SRCDIR)/pcb.c $(DEFS)
+	$(CC) $(CFLAGS) $(SRCDIR)/pcb.c
+	

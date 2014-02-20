@@ -18,18 +18,16 @@ void initASL()
 	semd_h = &semdTable[0]; // dummy
 	semd_h->s_next = NULL; // dummy
 
-	for(i=1; i<MAXPROC+1; i++)
+	semdFree_h = &semdTable[1];
+
+	for(i=1; i<MAXPROC; i++)
 	{
 		semdFree = &semdTable[i];
-
-		if(i == 1)
-			semdFree_h = semdFree;
-
-		if(i == MAXPROC)
-			semdFree->s_next = NULL;
-
-		else semdFree->s_next = &semdTable[i+1];
+                semdFree->s_next = &semdTable[i+1];
 	}
+
+	semdFree = &semdTable[MAXPROC];
+	semdFree->s_next = NULL;
 }
 
 
@@ -39,7 +37,7 @@ semd_t *look4sema4(int *semAdd)
 {
 	semd_t *semdTmp = semd_h;
 
-	while(*(semdTmp->s_semAdd) != *semAdd && semdTmp != NULL)
+	while(*((semdTmp->s_next)->s_semAdd) != *semAdd && semdTmp->s_next != NULL)
 		semdTmp = semdTmp->s_next;
 
 	return semdTmp;
@@ -49,10 +47,12 @@ int insertBlocked(int *semAdd, pcb_t *p)
 {
 	semd_t *semdTmp, *semdList = semd_h;
 
-	*(p->p_semAdd) = *semAdd;
-
-	if((semdTmp = look4sema4(semAdd)) != NULL)
-		insertProcQ(&(semdTmp->s_procQ), p);
+	if((semdTmp = look4sema4(semAdd))->s_next != NULL)
+	{
+		insertProcQ(&((semdTmp->s_next)->s_procQ), p);
+		*(p->p_semAdd) = *semAdd;
+		return FALSE;
+	}
 
 	else
 	{
@@ -70,12 +70,61 @@ int insertBlocked(int *semAdd, pcb_t *p)
 
 		}
 
+		semdTmp->s_semAdd = semAdd;
 		semdTmp->s_next = semdList->s_next;
 		semdList->s_next = semdTmp;
 
 		semdTmp->s_procQ = mkEmptyProcQ();
 		insertProcQ(&(semdTmp->s_procQ), p);
+		*(p->p_semAdd) = *semAdd;
 
 		return FALSE;
 	}
 }
+
+pcb_t *removeBlocked(int *semAdd)
+{
+	semd_t *semdTmp, *semRet;
+	pcb_t *p;
+
+	if((semdTmp = look4sema4(semAdd))->s_next == NULL)
+		return NULL;
+
+	p = removeProcQ(&((semdTmp->s_next)->s_procQ));
+
+	if(emptyProcQ((semdTmp->s_next)->s_procQ))
+	{
+		semRet = semdTmp->s_next;
+		semdTmp->s_next = (semdTmp->s_next)->s_next;
+
+		semRet->s_next = semdFree_h;
+		semdFree_h = semRet;
+	}
+
+	return p;
+}
+
+pcb_t *outBlocked(pcb_t *p)
+{
+	semd_t *semdTmp;
+
+	semdTmp = (look4sema4(p->p_semAdd))->s_next;
+
+	if((outProcQ(&(semdTmp->s_procQ), p)) == NULL)
+		return NULL;
+
+	return p;
+}
+
+pcb_t *headBlocked(int *semAdd)
+{
+	semd_t *semdTmp;
+
+	semdTmp = (look4sema4(semAdd))->s_next;
+
+	if(semdTmp == NULL || semdTmp->s_procQ == NULL)
+		return NULL;
+
+	return (semdTmp->s_procQ)->p_next;
+}
+
