@@ -1,8 +1,6 @@
 #include "const.h"
 #include "pcb.h"
 
-extern void addokbuf(char *strp);
-
 pcb_t *pcbFree, *pcbFree_h, *pcbFree_t;
 static pcb_t procp[MAXPROC];
 
@@ -138,7 +136,6 @@ pcb_t *outProcQ(pcb_t **tp, pcb_t *p)
 		if((*tp)->p_next == (*tp))
 		{
 			*tp = NULL;
-			addokbuf("eliminato unico elemento\n");
 			p->p_prev = p->p_next = NULL;
 			return p;
 		}
@@ -147,7 +144,6 @@ pcb_t *outProcQ(pcb_t **tp, pcb_t *p)
 		(*tp)->p_next = p->p_next;
 		((*tp)->p_next)->p_prev = (*tp);
 		p->p_prev = p->p_next = NULL;
-		addokbuf("eleminata la tail\n");
                	return p;
 	}
 
@@ -162,7 +158,6 @@ pcb_t *outProcQ(pcb_t **tp, pcb_t *p)
 				pcbTmp->p_next = p->p_next;
 				(pcbTmp->p_next)->p_prev = pcbTmp;
 				p->p_prev = p->p_next = NULL;
-				addokbuf("eliminato un processo nel mezzo\n");
                                 return p;
 			}
 
@@ -171,7 +166,6 @@ pcb_t *outProcQ(pcb_t **tp, pcb_t *p)
 
         }
 
-	addokbuf("elemento non trovato\n");
 	return NULL;
 }
 
