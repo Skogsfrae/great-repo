@@ -1,6 +1,8 @@
 #include "../h/const.h"
 #include "../h/pcb.h"
 
+extern void addokbuf(char *strp);
+
 pcb_t *pcbFree, *pcbFree_h, *pcbFree_t;
 static pcb_t procp[MAXPROC];
 
@@ -125,11 +127,28 @@ pcb_t *outProcQ(pcb_t **tp, pcb_t *p)
 {
         pcb_t *pcbTmp = (*tp);
 
+	if(emptyProcQ(*tp))
+	{
+		addokbuf("coda vuota\n");
+		return NULL;
+	}
+
         if (p == (*tp))
 	{
+		if((*tp)->p_next == (*tp))
+		{
+			*tp = NULL;
+			addokbuf("eliminato unico elemento\n");
+			p->p_prev = p->p_next = NULL;
+			return p;
+		}
+
 		(*tp) = p->p_prev;
 		(*tp)->p_next = p->p_next;
-                return p;
+		((*tp)->p_next)->p_prev = (*tp);
+		p->p_prev = p->p_next = NULL;
+		addokbuf("eleminata la tail\n");
+               	return p;
 	}
 
         else
@@ -141,6 +160,9 @@ pcb_t *outProcQ(pcb_t **tp, pcb_t *p)
 			{
 				pcbTmp = p->p_prev;
 				pcbTmp->p_next = p->p_next;
+				(pcbTmp->p_next)->p_prev = pcbTmp;
+				p->p_prev = p->p_next = NULL;
+				addokbuf("eliminato un processo nel mezzo\n");
                                 return p;
 			}
 
@@ -149,7 +171,8 @@ pcb_t *outProcQ(pcb_t **tp, pcb_t *p)
 
         }
 
-        return NULL;
+	addokbuf("elemento non trovato\n");
+	return NULL;
 }
 
 pcb_t *headProcQ(pcb_t *tp)

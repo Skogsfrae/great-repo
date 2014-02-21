@@ -124,7 +124,7 @@ pcb_t *outBlocked(pcb_t *p)
 
 	semdTmp = (look4sema4(p->p_semAdd))->s_next;
 
-	if((outProcQ(&(semdTmp->s_procQ), p)) == NULL)
+	if((p = outProcQ(&(semdTmp->s_procQ), p)) == NULL)
 		return NULL;
 
 	return p;
