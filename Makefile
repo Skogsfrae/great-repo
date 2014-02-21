@@ -13,20 +13,26 @@ CONVFLAGS = -k
 all: kernel.core.uarm clean
 
 kernel.core.uarm: p1test
+	@echo "\nConverting elf to uarm executable"
 	$(CONVERTER) $(CONVFLAGS) p1test
 
 p1test: asl.o pcb.o p1test.o
-	$(LD) $(LDFLAGS) $(EXECUTABLE) $(CRTSO) $(LIBUARM) c/asl.o c/pcb.o p1test.0.1.o
+	@echo "\nLinking all modules"
+	$(LD) $(LDFLAGS) $(EXECUTABLE) $(CRTSO) $(LIBUARM) asl.o pcb.o p1test.0.1.o
 
-asl.o: c/asl.c
-	$(CC) $(CFLAGS) c/asl.o c/asl.c
+asl.o: asl.c
+	@echo "\nCompiling asl module"
+	$(CC) $(CFLAGS) asl.o asl.c
 
-pcb.o: c/pcb.c
-	$(CC) $(CFLAGS) c/pcb.o c/pcb.c
+pcb.o: pcb.c
+	@echo "\nCompiling pcb module"
+	$(CC) $(CFLAGS) pcb.o pcb.c
 
 p1test.o: p1test.c
+	@echo "\nCompiling p1test main module"
 	$(CC) $(CFLAGS) p1test.0.1.o p1test.0.1.c
 
 clean: 
-	rm -r -f p1test.0.1.o c/asl.o c/pcb.o
+	@echo "\nCleaning object files"
+	rm -rf p1test.0.1.o asl.o pcb.o
 
