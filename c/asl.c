@@ -39,7 +39,7 @@ semd_t *look4sema4(int *semAdd)
 {
 	semd_t *semdTmp = semd_h;
 
-	while(*((semdTmp->s_next)->s_semAdd) != *semAdd && semdTmp->s_next != NULL)
+	while((semdTmp->s_next)->s_semAdd != semAdd && semdTmp->s_next != NULL)
 		semdTmp = semdTmp->s_next;
 
 	return semdTmp;
@@ -51,20 +51,20 @@ int insertBlocked(int *semAdd, pcb_t *p)
 
 //Check whether the process passed has already a semaphore associated and
 //in case remove it from its queue
-	if(p->p_semAdd != NULL)
+/*	if(p->p_semAdd != NULL)
 	{
 		semd_t *semOld;
 
 		semOld = (look4sema4(p->p_semAdd))->s_next;
 
 		if((p = outProcQ(&(semOld->s_procQ), p)) == NULL)
-			return 5;
+			return FALSE;
 	}
-
+*/
 	if((semdTmp = look4sema4(semAdd))->s_next != NULL)
 	{
 		insertProcQ(&((semdTmp->s_next)->s_procQ), p);
-		*(p->p_semAdd) = *semAdd;
+		p->p_semAdd = semAdd;
 		return FALSE;
 	}
 
@@ -78,7 +78,7 @@ int insertBlocked(int *semAdd, pcb_t *p)
 
 		while((semdList->s_next) != NULL)
 		{
-			if(*semAdd < *((semdList->s_next)->s_semAdd))
+			if(semAdd < (semdList->s_next)->s_semAdd)
 				break;
 			semdList = semdList->s_next;
 
@@ -90,7 +90,7 @@ int insertBlocked(int *semAdd, pcb_t *p)
 
 		semdTmp->s_procQ = mkEmptyProcQ();
 		insertProcQ(&(semdTmp->s_procQ), p);
-		*(p->p_semAdd) = *semAdd;
+		p->p_semAdd = semAdd;
 
 		return FALSE;
 	}
