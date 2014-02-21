@@ -4,6 +4,8 @@
 pcb_t *pcbFree, *pcbFree_h, *pcbFree_t;
 static pcb_t procp[MAXPROC];
 
+//Pcb_t struct was made bidirectional in orther to easily remove or add a new
+//item to 
 void initPcbs()
 {
 	int i;

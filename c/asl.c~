@@ -18,18 +18,16 @@ void initASL()
 	semd_h = &semdTable[0]; // dummy
 	semd_h->s_next = NULL; // dummy
 
-	for(i=1; i<MAXPROC+1; i++)
+	semdFree_h = &semdTable[1];
+
+	for(i=1; i<MAXPROC; i++)
 	{
 		semdFree = &semdTable[i];
-
-		if(i == 1)
-			semdFree_h = semdFree;
-
-		if(i == MAXPROC)
-			semdFree->s_next = NULL;
-
-		else semdFree->s_next = &semdTable[i+1];
+                semdFree->s_next = &semdTable[i+1];
 	}
+
+	semdFree = &semdTable[MAXPROC];
+	semdFree->s_next = NULL;
 }
 
 
