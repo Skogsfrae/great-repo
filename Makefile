@@ -10,7 +10,7 @@ LDFLAGS = -T /usr/include/uarm/ldscripts/elf32ltsarm.h.uarmcore.x  -o
 CONVERTER = elf2uarm
 CONVFLAGS = -k
 
-all: kernel.core.uarm
+all: kernel.core.uarm clean
 
 kernel.core.uarm: p1test
 	$(CONVERTER) $(CONVFLAGS) p1test
@@ -26,3 +26,7 @@ pcb.o: c/pcb.c
 
 p1test.o: p1test.c
 	$(CC) $(CFLAGS) p1test.0.1.o p1test.0.1.c
+
+clean: 
+	rm -r -f p1test.0.1.o c/asl.o c/pcb.o
+
