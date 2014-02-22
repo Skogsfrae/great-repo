@@ -45,7 +45,7 @@ char errbuf[128];			/* contains reason for failing */
 char msgbuf[128];			/* nonrecoverable error message before shut down */
 int sem[MAXSEM];
 int onesem;
-pcb_t	*procp[MAXPROC], *c, *p, *qa, *q, *firstproc, *lastproc, *midproc;
+pcb_t	*procp[MAXPROC], *p, *qa, *q, *firstproc, *lastproc, *midproc;
 char *mp = okbuf;
 
 /* This function places the specified character string in okbuf and
@@ -252,8 +252,6 @@ int main() {
 	if (p != q)
 		adderrbuf("outBlocked(2): couldn't remove from valid queue   ");
 	p = outBlocked(q);
-	if(c = p)
-		addokbuf("saaaaaas \n");
 	if (p != NULL)
 		adderrbuf("outBlocked(): removed same process twice.");
 	if (headBlocked(&sem[9]) != NULL)

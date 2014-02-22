@@ -7,15 +7,16 @@ typedef struct semd_t {
         pcb_t *s_procQ;        /*tail pointer to a process queue */
 } semd_t;
 
-semd_t *semdFree, *semdFree_h, *semd_h;
+HIDDEN semd_t *semdFree, *semdFree_h, *semd_h;
 static semd_t semdTable[MAXPROC+1];
 
 void initASL()
 {
 	int i;
 
-	semd_h = &semdTable[0]; // dummy
-	semd_h->s_next = NULL; // dummy
+// Initialize the dummy semd
+	semd_h = &semdTable[0];
+	semd_h->s_next = NULL;
 
 	for(i=1; i<MAXPROC+1; i++)
 	{
@@ -32,8 +33,8 @@ void initASL()
 }
 
 
-//look4sema4 cerca il semafoto nella lista semd_h, se lo trova lo restituisce
-//altrimenti restituisce NULL
+// This function searches for the desired semaphore in the ASL and returns the
+// previous descriptor
 semd_t *look4sema4(int *semAdd)
 {
 	semd_t *semdTmp = semd_h;
@@ -48,18 +49,7 @@ int insertBlocked(int *semAdd, pcb_t *p)
 {
 	semd_t *semdTmp, *semdList = semd_h;
 
-//Check whether the process passed has already a semaphore associated and
-//in case remove it from its queue
-/*	if(p->p_semAdd != NULL)
-	{
-		semd_t *semOld;
-
-		semOld = (look4sema4(p->p_semAdd))->s_next;
-
-		if((p = outProcQ(&(semOld->s_procQ), p)) == NULL)
-			return FALSE;
-	}
-*/
+// If the semaphore is found, insert the process block to its queue
 	if((semdTmp = look4sema4(semAdd))->s_next != NULL)
 	{
 		insertProcQ(&((semdTmp->s_next)->s_procQ), p);
@@ -67,6 +57,8 @@ int insertBlocked(int *semAdd, pcb_t *p)
 		return FALSE;
 	}
 
+// Otherwise, if the semdFree is not empty, create a new semaphore descriptor
+// and insert the process block to its queue
 	else
 	{
 		if(semdFree_h == NULL)
@@ -100,9 +92,11 @@ pcb_t *removeBlocked(int *semAdd)
 	semd_t *semdTmp, *semRet;
 	pcb_t *p;
 
+// Search for the requested semaphore, if none is found return NULL
 	if((semdTmp = look4sema4(semAdd))->s_next == NULL)
 		return NULL;
 
+// Remove the head element of the semaphore process queue and return it
 	p = removeProcQ(&((semdTmp->s_next)->s_procQ));
 
 	if(emptyProcQ((semdTmp->s_next)->s_procQ))

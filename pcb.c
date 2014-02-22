@@ -1,7 +1,7 @@
 #include "const.h"
 #include "pcb.h"
 
-pcb_t *pcbFree, *pcbFree_h, *pcbFree_t;
+HIDDEN pcb_t *pcbFree, *pcbFree_h;
 static pcb_t procp[MAXPROC];
 
 //Pcb_t struct was made bidirectional in orther to easily remove or add a new
@@ -23,13 +23,13 @@ void initPcbs()
 
 		if(i == MAXPROC-1)
 		{
-			pcbFree_t = pcbFree;
 			pcbFree->p_next = NULL;
 		}
 		else pcbFree->p_next = &procp[i+1];
 	}
 }
 
+// As requested in Kaya documentation
 pcb_t *allocPcb()
 {
 	pcb_t *pcbTmp;
@@ -49,20 +49,12 @@ pcb_t *allocPcb()
 	return pcbTmp;
 }
 
+// As requested in Kaya documentation
 void freePcb(pcb_t *p)
 {
-	if(pcbFree_h == NULL)
-	{
-		pcbFree_h = pcbFree_t = p;
-		pcbFree_h->p_next = pcbFree_t->p_prev = NULL;
-	}
-
-	else
-	{
-		p->p_next = pcbFree_h;
-		p->p_prev = NULL;
-		pcbFree_h = p;
-	}
+	p->p_next = pcbFree_h;
+	p->p_prev = NULL;
+	pcbFree_h = p;
 }
 
 pcb_t *mkEmptyProcQ()
@@ -81,6 +73,8 @@ int emptyProcQ(pcb_t *tp)
 
 void insertProcQ(pcb_t **tp, pcb_t *p)
 {
+
+// If the queue is empty, insert the entry and link it to itself
 	if((*tp) == NULL)
 	{
 		(*tp) = p;
@@ -88,6 +82,7 @@ void insertProcQ(pcb_t **tp, pcb_t *p)
 		p->p_prev = p;
 	}
 
+// Otherwise, insert the entry at the tail of the queue
 	else
 	{
 		((*tp)->p_next)->p_prev = p;
@@ -103,9 +98,12 @@ pcb_t *removeProcQ(pcb_t **tp)
 {
 	pcb_t *pcbTmp;
 
-	if( (*tp) == NULL)
+// If the queue is empty, hence the requested entry is not there, return NULL
+        if(emptyProcQ(*tp))
 		return NULL;
 
+// If the requested entry is the only one of the queue, remove it and make *tp
+// point to NULL, then return the removed entry
 	if((*tp)->p_next == (*tp))
 	{
 		pcbTmp = (*tp);
@@ -113,6 +111,7 @@ pcb_t *removeProcQ(pcb_t **tp)
 		return pcbTmp;
 	}
 
+// Simply remove the requested entry and return it
 	pcbTmp = (*tp)->p_next;
 
 	(((*tp)->p_next)->p_next)->p_prev = (*tp);
@@ -125,12 +124,11 @@ pcb_t *outProcQ(pcb_t **tp, pcb_t *p)
 {
         pcb_t *pcbTmp = (*tp);
 
+// If the queue is empty, hence the requested entry is not there, return NULL
 	if(emptyProcQ(*tp))
-	{
-		addokbuf("coda vuota\n");
 		return NULL;
-	}
 
+// If the requested entry is the tail remove it and update *tp properly
         if (p == (*tp))
 	{
 		if((*tp)->p_next == (*tp))
@@ -147,6 +145,7 @@ pcb_t *outProcQ(pcb_t **tp, pcb_t *p)
                	return p;
 	}
 
+// If none of the above search for the requested entry and remove it
         else
         {
                 pcbTmp = pcbTmp->p_next;
@@ -213,9 +212,11 @@ pcb_t *outChild(pcb_t *p)
 	if(p->p_prnt == NULL)
 		return NULL;
 
+// If p is the first child, then simply remove it
 	if((p->p_prnt)->p_child == p)
 		return removeChild(p->p_prnt);
 
+// Otherwise search for it and remove it
 	else
 	{
 		pcbTmp = (p->p_prnt)->p_child;
