@@ -57,7 +57,7 @@ int insertBlocked(int *semAdd, pcb_t *p)
 		return FALSE;
 	}
 
-// Otherwise, if the semdFree is not empty, create a new semaphore descriptor
+// Otherwise, unless semdFree is empty, create a new semaphore descriptor
 // and insert the process block to its queue
 	else
 	{
