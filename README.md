@@ -4,7 +4,7 @@ great-repo
 Kaya project
 
 Documentation of Kaya OS v1.2
-by Dario Bonesi, Leopoldo Lunghi, Mirko Mucaria, Tonino Petrulli
+by Dario Bonesi, Leopoldo Lunghi, Mirko Mucaria.
 
 
 1. Introduction
