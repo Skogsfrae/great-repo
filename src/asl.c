@@ -1,5 +1,5 @@
-#include "pcb.e"
-#include "const.h"
+#include "../include/pcb.e"
+#include "../include/const.h"
 
 typedef struct semd_t {
         struct semd_t *s_next; /* next element on the ASL */
@@ -7,11 +7,12 @@ typedef struct semd_t {
         pcb_t *s_procQ;        /*tail pointer to a process queue */
 } semd_t;
 
-HIDDEN semd_t *semdFree, *semdFree_h, *semd_h;
-static semd_t semdTable[MAXPROC+1];
+HIDDEN semd_t *semdFree_h, *semd_h;
 
 void initASL()
 {
+	semd_t *semdFree;
+	static semd_t semdTable[MAXPROC+1];
 	int i;
 
 // Initialize the dummy semd
@@ -32,22 +33,49 @@ void initASL()
 	}
 }
 
+// Remove semdTmp from ASL
+void removeSema4(semd_t *semdTmp)
+{
+	semd_t *semRet;
+
+	semRet = semdTmp->s_next;
+        semdTmp->s_next = (semdTmp->s_next)->s_next;
+
+        semRet->s_next = semdFree_h;
+        semdFree_h = semRet;
+}
+
+semd_t *findPosition(int *semAdd)
+{
+	semd_t *semdTmp = semd_h;
+
+	while((semdTmp->s_next)->s_semAdd != semAdd && semdTmp->s_next != NULL)
+        {
+                if(semAdd > (semdTmp->s_next)->s_semAdd)
+                        break;
+
+                semdTmp = semdTmp->s_next;
+        }
+
+	return semdTmp;
+}
 
 // This function searches for the desired semaphore in the ASL and returns the
 // previous descriptor
 semd_t *look4sema4(int *semAdd)
 {
-	semd_t *semdTmp = semd_h;
+	semd_t *semdTmp = findPosition(semAdd);
 
-	while((semdTmp->s_next)->s_semAdd != semAdd && semdTmp->s_next != NULL)
-		semdTmp = semdTmp->s_next;
+	if( (semdTmp->s_next)->s_semAdd == semAdd)
+		return semdTmp;
 
-	return semdTmp;
+	else
+		return NULL;
 }
 
 int insertBlocked(int *semAdd, pcb_t *p)
 {
-	semd_t *semdTmp, *semdList = semd_h;
+	semd_t *semdTmp, *semdList;
 
 // If the semaphore is found, insert the process block to its queue
 	if((semdTmp = look4sema4(semAdd))->s_next != NULL)
@@ -64,26 +92,23 @@ int insertBlocked(int *semAdd, pcb_t *p)
 		if(semdFree_h == NULL)
 			return TRUE;
 
-		semdTmp = semdFree_h;
-		semdFree_h = semdFree_h->s_next;
-
-		while((semdList->s_next) != NULL)
+		else
 		{
-			if(semAdd < (semdList->s_next)->s_semAdd)
-				break;
-			semdList = semdList->s_next;
+			semdTmp = semdFree_h;
+			semdFree_h = semdFree_h->s_next;
 
+			semdList = findPosition(semAdd);
+
+			semdTmp->s_semAdd = semAdd;
+			semdTmp->s_next = semdList->s_next;
+			semdList->s_next = semdTmp;
+
+			semdTmp->s_procQ = mkEmptyProcQ();
+			insertProcQ(&(semdTmp->s_procQ), p);
+			p->p_semAdd = semAdd;
+
+			return FALSE;
 		}
-
-		semdTmp->s_semAdd = semAdd;
-		semdTmp->s_next = semdList->s_next;
-		semdList->s_next = semdTmp;
-
-		semdTmp->s_procQ = mkEmptyProcQ();
-		insertProcQ(&(semdTmp->s_procQ), p);
-		p->p_semAdd = semAdd;
-
-		return FALSE;
 	}
 }
 
@@ -99,14 +124,9 @@ pcb_t *removeBlocked(int *semAdd)
 // Remove the head element of the semaphore process queue and return it
 	p = removeProcQ(&((semdTmp->s_next)->s_procQ));
 
+// If the procQ becomes empty, remove semdTmp from ASL
 	if(emptyProcQ((semdTmp->s_next)->s_procQ))
-	{
-		semRet = semdTmp->s_next;
-		semdTmp->s_next = (semdTmp->s_next)->s_next;
-
-		semRet->s_next = semdFree_h;
-		semdFree_h = semRet;
-	}
+		removeSema4(semdTmp);
 
 	return p;
 }
@@ -115,10 +135,13 @@ pcb_t *outBlocked(pcb_t *p)
 {
 	semd_t *semdTmp;
 
-	semdTmp = (look4sema4(p->p_semAdd))->s_next;
+	semdTmp = look4sema4(p->p_semAdd);
 
-	if((p = outProcQ(&(semdTmp->s_procQ), p)) == NULL)
+	if((p = outProcQ(&((semdTmp->s_next)->s_procQ), p)) == NULL)
 		return NULL;
+
+	if( emptyProcQ((semdTmp->s_next)->s_procQ) )
+		removeSema4(semdTmp);
 
 	return p;
 }

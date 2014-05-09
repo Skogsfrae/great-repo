@@ -1,13 +1,14 @@
-#include "const.h"
-#include "pcb.h"
+#include "../include/const.h"
+#include "../include/pcb.h"
 
-HIDDEN pcb_t *pcbFree, *pcbFree_h;
-static pcb_t procp[MAXPROC];
+HIDDEN pcb_t *pcbFree_h;
 
-//Pcb_t struct was made bidirectional in orther to easily remove or add a new
-//item to 
+// Pcb_t struct was made bidirectional in orther to easily remove or add a new
+// item to 
 void initPcbs()
 {
+	pcb_t *pcbFree;
+	static pcb_t procp[MAXPROC];
 	int i;
 
 	for(i=0; i<MAXPROC; i++)
@@ -18,13 +19,17 @@ void initPcbs()
 		{
 			pcbFree_h = pcbFree;
 			pcbFree->p_prev = NULL;
-		}   
-		else pcbFree->p_prev = &procp[i-1];
+		}
+   
+		else 
+			pcbFree->p_prev = &procp[i-1];
+
 
 		if(i == MAXPROC-1)
 		{
 			pcbFree->p_next = NULL;
 		}
+
 		else pcbFree->p_next = &procp[i+1];
 	}
 }
@@ -42,7 +47,11 @@ pcb_t *allocPcb()
 	pcbFree_h = pcbFree_h->p_next;
 	pcbFree_h->p_prev = NULL;
 
-	pcbTmp->p_prnt = pcbTmp->p_child = pcbTmp->p_sib = pcbTmp->p_next = pcbFree->p_prev = NULL;
+	pcbTmp->p_prnt = NULL;
+	pcbTmp->p_child = NULL;
+	pcbTmp->p_sib = NULL;
+	pcbTmp->p_next = NULL;
+	pcbFree_h->p_prev = NULL;
 	pcbTmp->p_s = 0;
 	pcbTmp->p_semAdd = NULL;
 
@@ -108,14 +117,16 @@ pcb_t *removeProcQ(pcb_t **tp)
 	{
 		pcbTmp = (*tp);
 		(*tp) = NULL;
-		return pcbTmp;
 	}
 
 // Simply remove the requested entry and return it
-	pcbTmp = (*tp)->p_next;
+	else
+	{
+		pcbTmp = (*tp)->p_next;
 
-	(((*tp)->p_next)->p_next)->p_prev = (*tp);
-	(*tp)->p_next = ((*tp)->p_next)->p_next;
+		(((*tp)->p_next)->p_next)->p_prev = (*tp);
+		(*tp)->p_next = ((*tp)->p_next)->p_next;
+	}
 
 	return pcbTmp;
 }
@@ -123,6 +134,7 @@ pcb_t *removeProcQ(pcb_t **tp)
 pcb_t *outProcQ(pcb_t **tp, pcb_t *p)
 {
         pcb_t *pcbTmp = (*tp);
+	_Bool found = FALSE;
 
 // If the queue is empty, hence the requested entry is not there, return NULL
 	if(emptyProcQ(*tp))
@@ -134,21 +146,25 @@ pcb_t *outProcQ(pcb_t **tp, pcb_t *p)
 		if((*tp)->p_next == (*tp))
 		{
 			*tp = NULL;
-			p->p_prev = p->p_next = NULL;
-			return p;
+			p->p_prev = p->p_next = NULL;			
 		}
 
-		(*tp) = p->p_prev;
-		(*tp)->p_next = p->p_next;
-		((*tp)->p_next)->p_prev = (*tp);
-		p->p_prev = p->p_next = NULL;
-               	return p;
+		else
+		{
+			(*tp) = p->p_prev;
+			(*tp)->p_next = p->p_next;
+			((*tp)->p_next)->p_prev = (*tp);
+			p->p_prev = p->p_next = NULL;
+               	}
+
+		found = TRUE;
 	}
 
 // If none of the above search for the requested entry and remove it
         else
         {
                 pcbTmp = pcbTmp->p_next;
+
                 while (pcbTmp != (*tp))
                 {
                         if (p == pcbTmp)
@@ -157,21 +173,26 @@ pcb_t *outProcQ(pcb_t **tp, pcb_t *p)
 				pcbTmp->p_next = p->p_next;
 				(pcbTmp->p_next)->p_prev = pcbTmp;
 				p->p_prev = p->p_next = NULL;
-                                return p;
+				break;
 			}
 
                         else pcbTmp = pcbTmp->p_next;
                 }
 
+		found = TRUE;
         }
 
-	return NULL;
+	if(found)
+		return p;
+
+	else return NULL;
 }
 
 pcb_t *headProcQ(pcb_t *tp)
 {
 	if (tp == NULL)
 		return NULL;
+
 
 	else return tp->p_next;
 }
@@ -214,7 +235,7 @@ pcb_t *outChild(pcb_t *p)
 
 // If p is the first child, then simply remove it
 	if((p->p_prnt)->p_child == p)
-		return removeChild(p->p_prnt);
+		removeChild(p->p_prnt);
 
 // Otherwise search for it and remove it
 	else
@@ -226,6 +247,7 @@ pcb_t *outChild(pcb_t *p)
 
 		pcbTmp->p_sib = (pcbTmp->p_sib)->p_sib;
 		p->p_prnt = p->p_sib = NULL;
-		return p;
 	}
+
+	return p;
 }

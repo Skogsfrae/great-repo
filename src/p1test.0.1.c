@@ -31,12 +31,12 @@
  *    Modified by Davide Brini on Nov 02, 2004
  */
 
-#include "const.h"
-#include "types.h"
+#include "../include/const.h"
+#include "../include/types.h"
 
-#include "libuarm.h"
-#include "pcb.h"
-#include "asl.h"
+#include "../include/libuarm.h"
+#include "../include/pcb.h"
+#include "../include/asl.h"
 
 #define	MAXSEM	MAXPROC
 
